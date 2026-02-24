@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { exerciseEmojis } from '../data/exercises';
 
 export default function WorkoutScreen({ route, navigation }) {
   const { sessionType, date } = route.params;
@@ -62,7 +63,7 @@ export default function WorkoutScreen({ route, navigation }) {
       const allSessions = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key.startsWith('athlete-sessions-')) {
+        if (key && key.startsWith('athlete-sessions-')) {
           const data = localStorage.getItem(key);
           if (data) {
             allSessions[key] = JSON.parse(data);
@@ -172,17 +173,21 @@ export default function WorkoutScreen({ route, navigation }) {
     }
   };
 
-  const renderDial = (label, value, setValue, max, step = 1, unit = '') => {
+  const renderDial = (label, value, setValue, max, step = 1) => {
     const values = [];
     for (let i = 0; i <= max; i += step) {
       values.push(i);
     }
 
+    const currentIndex = value / step;
+    const startIdx = Math.max(0, currentIndex - 2);
+    const visibleValues = values.slice(startIdx, startIdx + 5);
+
     return (
       <View style={styles.dialContainer}>
         <Text style={styles.dialLabel}>{label}</Text>
         <View style={styles.dialWheel}>
-          {values.slice(Math.max(0, value / step - 2), Math.min(values.length, value / step + 3)).map((val, idx) => {
+          {visibleValues.map((val) => {
             const isCenter = val === value;
             return (
               <TouchableOpacity
@@ -191,7 +196,9 @@ export default function WorkoutScreen({ route, navigation }) {
                 style={[styles.dialItem, isCenter && styles.dialItemCenter]}
               >
                 <Text style={[styles.dialText, isCenter && styles.dialTextCenter]}>
-                  {val}{unit}
+                  {val}
+                  {label === 'Weight' && 'kg'}
+                  {label === 'Duration' && 'min'}
                 </Text>
               </TouchableOpacity>
             );
@@ -224,6 +231,7 @@ export default function WorkoutScreen({ route, navigation }) {
 
   const progress = stats.total > 0 ? (stats.current / stats.total) * 100 : 0;
   const pbsb = calculatePBSB(currentExercise.name);
+  const emoji = exerciseEmojis[currentExercise.name] || '💪';
 
   return (
     <View style={styles.container}>
@@ -243,20 +251,20 @@ export default function WorkoutScreen({ route, navigation }) {
           <View style={[styles.progressBar, { width: `${progress}%` }]} />
         </View>
         <View style={styles.statsRow}>
-          <Text style={styles.statText}>✓ {stats.completed}</Text>
-          <Text style={styles.statText}>⏭️ {stats.skipped}</Text>
+          <Text style={styles.statBadge}>✓ {stats.completed}</Text>
+          <Text style={styles.statBadge}>⏭️ {stats.skipped}</Text>
         </View>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         {/* Category Badge */}
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryText}>{currentExercise.category}</Text>
         </View>
 
-        {/* Exercise Name */}
+        {/* Exercise Name with Emoji */}
         <Text style={styles.exerciseName}>
-          {currentExercise.name === 'Dynamic Stretching' ? '🧘 Good Morning' : currentExercise.name}
+          {emoji} {currentExercise.name}
         </Text>
 
         {/* PB/SB Badges */}
@@ -269,21 +277,21 @@ export default function WorkoutScreen({ route, navigation }) {
             )}
             {pbsb.sb && (
               <View style={styles.sbBadge}>
-                <Text style={styles.badgeText}>SB: {pbsb.sb}kg (3mo)</Text>
+                <Text style={styles.badgeText}>SB: {pbsb.sb}kg <Text style={styles.badgeSubtext}>(3mo)</Text></Text>
               </View>
             )}
           </View>
         )}
 
         {/* Dial Wheels */}
-        <View style={styles.dialsContainer}>
+        <View style={styles.dialsGrid}>
           <View style={styles.dialRow}>
-            {renderDial('Sets', sets, setSets, 50)}
-            {renderDial('Reps', reps, setReps, 100)}
+            {renderDial('Sets', sets, setSets, 50, 1)}
+            {renderDial('Reps', reps, setReps, 100, 1)}
           </View>
           <View style={styles.dialRow}>
-            {renderDial('Weight', weight, setWeight, 200, 5, 'kg')}
-            {renderDial('Duration', duration, setDuration, 120, 1, 'min')}
+            {renderDial('Weight', weight, setWeight, 200, 5)}
+            {renderDial('Duration', duration, setDuration, 120, 1)}
           </View>
         </View>
 
@@ -308,7 +316,7 @@ export default function WorkoutScreen({ route, navigation }) {
           onPress={() => setCurrentExerciseIndex(Math.max(0, currentExerciseIndex - 1))}
           disabled={currentExerciseIndex === 0}
         >
-          <Text style={styles.navBtnText}>⟨ Prev</Text>
+          <Text style={styles.navBtnText}>← Prev</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.skipBtn} onPress={skipExercise}>
@@ -316,9 +324,7 @@ export default function WorkoutScreen({ route, navigation }) {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.completeBtn} onPress={completeExercise}>
-          <Text style={styles.completeBtnText}>
-            {currentExercise.completed ? '✓ Complete' : '✓ Complete'}
-          </Text>
+          <Text style={styles.completeBtnText}>✓ Complete</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -326,7 +332,7 @@ export default function WorkoutScreen({ route, navigation }) {
           onPress={() => setCurrentExerciseIndex(Math.min(exercises.length - 1, currentExerciseIndex + 1))}
           disabled={currentExerciseIndex === exercises.length - 1}
         >
-          <Text style={styles.navBtnText}>Next ⟩</Text>
+          <Text style={styles.navBtnText}>Next →</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -334,43 +340,45 @@ export default function WorkoutScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a1628' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#1e293b' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#334155' },
   closeButton: { fontSize: 24, color: '#fff', padding: 8 },
   headerTitle: { fontSize: 16, fontWeight: '600', color: '#fff' },
-  progressSection: { backgroundColor: '#1e293b', padding: 16, paddingTop: 8 },
+  progressSection: { backgroundColor: '#1e293b', padding: 16, borderBottomWidth: 1, borderBottomColor: '#334155' },
   progressLabel: { fontSize: 14, color: '#94a3b8', marginBottom: 8, textAlign: 'center' },
-  progressBarContainer: { height: 4, backgroundColor: '#334155', borderRadius: 2, overflow: 'hidden' },
-  progressBar: { height: '100%', backgroundColor: '#10b981' },
-  statsRow: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 8 },
-  statText: { fontSize: 14, color: '#94a3b8' },
+  progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden', marginBottom: 8 },
+  progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
+  statsRow: { flexDirection: 'row', justifyContent: 'center', gap: 16 },
+  statBadge: { backgroundColor: '#334155', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, fontSize: 14, color: '#fff' },
   content: { flex: 1 },
-  categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#1e40af', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, margin: 16, marginBottom: 8 },
+  contentContainer: { paddingBottom: 24 },
+  categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#1e40af', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 12 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  exerciseName: { fontSize: 32, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 16 },
+  exerciseName: { fontSize: 36, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 16 },
   badgesRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 24 },
-  pbBadge: { backgroundColor: 'rgba(234, 179, 8, 0.2)', borderWidth: 1, borderColor: 'rgba(234, 179, 8, 0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  sbBadge: { backgroundColor: 'rgba(59, 130, 246, 0.2)', borderWidth: 1, borderColor: 'rgba(59, 130, 246, 0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  pbBadge: { backgroundColor: '#78350f', borderWidth: 1, borderColor: '#eab308', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  sbBadge: { backgroundColor: '#1e3a8a', borderWidth: 1, borderColor: '#3b82f6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   badgeText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  dialsContainer: { gap: 16, paddingHorizontal: 16, marginBottom: 24 },
+  badgeSubtext: { fontSize: 12, color: '#94a3b8' },
+  dialsGrid: { gap: 16, paddingHorizontal: 16 },
   dialRow: { flexDirection: 'row', gap: 16 },
-  dialContainer: { flex: 1, backgroundColor: '#1e3a5f', borderRadius: 12, padding: 12 },
-  dialLabel: { fontSize: 14, color: '#94a3b8', fontWeight: '600', marginBottom: 8, textAlign: 'center' },
-  dialWheel: { alignItems: 'center' },
-  dialItem: { paddingVertical: 8 },
-  dialItemCenter: { backgroundColor: 'rgba(59, 130, 246, 0.3)', borderRadius: 8, paddingHorizontal: 24 },
-  dialText: { fontSize: 18, color: '#64748b', fontWeight: '500' },
-  dialTextCenter: { fontSize: 36, color: '#fff', fontWeight: 'bold' },
-  notesSection: { paddingHorizontal: 16, marginBottom: 24 },
-  notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '600', marginBottom: 8 },
-  notesInput: { backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 80, textAlignVertical: 'top' },
-  bottomButtons: { flexDirection: 'row', padding: 16, gap: 12, backgroundColor: '#1e293b' },
-  navBtn: { paddingVertical: 16, paddingHorizontal: 20, backgroundColor: '#334155', borderRadius: 8 },
+  dialContainer: { flex: 1, backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16 },
+  dialLabel: { fontSize: 14, color: '#94a3b8', fontWeight: '600', marginBottom: 12, textAlign: 'center' },
+  dialWheel: { alignItems: 'center', gap: 4 },
+  dialItem: { paddingVertical: 6, paddingHorizontal: 16, minWidth: 100, alignItems: 'center' },
+  dialItemCenter: { backgroundColor: 'rgba(59, 130, 246, 0.4)', borderRadius: 8, paddingVertical: 8 },
+  dialText: { fontSize: 20, color: '#64748b', fontWeight: '500' },
+  dialTextCenter: { fontSize: 48, color: '#fff', fontWeight: 'bold' },
+  notesSection: { paddingHorizontal: 16, marginTop: 24 },
+  notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
+  notesInput: { backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 100, textAlignVertical: 'top' },
+  bottomButtons: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
+  navBtn: { paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#334155', borderRadius: 8, minWidth: 70, alignItems: 'center' },
   navBtnDisabled: { opacity: 0.3 },
-  navBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  skipBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#ea580c', borderRadius: 8, alignItems: 'center' },
+  navBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  skipBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#ea580c', borderRadius: 8, alignItems: 'center' },
   skipBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  completeBtn: { flex: 2, paddingVertical: 16, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center' },
+  completeBtn: { flex: 1.5, paddingVertical: 14, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center' },
   completeBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { fontSize: 18, color: '#94a3b8' },
