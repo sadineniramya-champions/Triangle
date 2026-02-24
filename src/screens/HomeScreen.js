@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { categories } from '../data/exercises';
 
 export default function HomeScreen({ navigation }) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [sessions, setSessions] = useState({ morning: [], evening: [] });
-
-  useEffect(() => {
-    loadSessions();
-  }, [selectedDate]);
 
   const loadSessions = () => {
     try {
@@ -33,6 +29,11 @@ export default function HomeScreen({ navigation }) {
       console.error('Error saving sessions:', error);
     }
   };
+
+  useEffect(() => {
+    loadSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
 
   const changeDate = (days) => {
     const date = new Date(selectedDate);
