@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 
 export default function WorkoutScreen({ route, navigation }) {
@@ -9,25 +9,6 @@ export default function WorkoutScreen({ route, navigation }) {
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [duration, setDuration] = useState(0);
-
-  const setsScrollRef = useRef(null);
-  const repsScrollRef = useRef(null);
-  const weightScrollRef = useRef(null);
-  const durationScrollRef = useRef(null);
-
-  useEffect(() => {
-    loadSession();
-  }, []);
-
-  useEffect(() => {
-    const currentExercise = getCurrentExercise();
-    if (currentExercise) {
-      setSets(parseInt(currentExercise.sets) || 0);
-      setReps(parseInt(currentExercise.reps) || 0);
-      setWeight(parseInt(currentExercise.weight) || 0);
-      setDuration(parseInt(currentExercise.duration) || 0);
-    }
-  }, [currentExerciseIndex, session]);
 
   const loadSession = () => {
     try {
@@ -74,6 +55,22 @@ export default function WorkoutScreen({ route, navigation }) {
     const skipped = exercises.filter(ex => ex.status === 'skipped').length;
     return { total, completed, skipped, current: currentExerciseIndex + 1 };
   };
+
+  useEffect(() => {
+    loadSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
+
+  useEffect(() => {
+    const currentExercise = getCurrentExercise();
+    if (currentExercise) {
+      setSets(parseInt(currentExercise.sets) || 0);
+      setReps(parseInt(currentExercise.reps) || 0);
+      setWeight(parseInt(currentExercise.weight) || 0);
+      setDuration(parseInt(currentExercise.duration) || 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExerciseIndex, session]);
 
   const completeExercise = () => {
     const exercises = getAllExercises();
@@ -124,28 +121,26 @@ export default function WorkoutScreen({ route, navigation }) {
     }
   };
 
-  const handleScroll = (type, event) => {
-    const scrollTop = event.nativeEvent.contentOffset.y;
-    const itemHeight = 48;
-    const index = Math.round(scrollTop / itemHeight);
-    
+  const updateValue = (type, newValue) => {
     switch(type) {
       case 'sets':
-        setSets(index);
+        setSets(newValue);
         break;
       case 'reps':
-        setReps(index);
+        setReps(newValue);
         break;
       case 'weight':
-        setWeight(index * 5);
+        setWeight(newValue);
         break;
       case 'duration':
-        setDuration(index);
+        setDuration(newValue);
+        break;
+      default:
         break;
     }
   };
 
-  const renderDialWheel = (label, value, max, increment = 1, ref, type) => {
+  const renderDialWheel = (label, value, max, increment = 1, type) => {
     const items = [];
     for (let i = 0; i <= max; i += increment) {
       items.push(i);
@@ -157,12 +152,9 @@ export default function WorkoutScreen({ route, navigation }) {
         <View style={styles.wheelWrapper}>
           <View style={styles.highlightBar} />
           <ScrollView
-            ref={ref}
             style={styles.wheel}
             showsVerticalScrollIndicator={false}
-            snapToInterval={48}
-            onScroll={(e) => handleScroll(type, e)}
-            scrollEventThrottle={16}
+            contentContainerStyle={styles.wheelContent}
           >
             <View style={styles.wheelPadding} />
             {items.map((item, idx) => {
@@ -171,11 +163,15 @@ export default function WorkoutScreen({ route, navigation }) {
               const fontSize = distance === 0 ? 36 : distance === 1 ? 24 : 18;
               
               return (
-                <View key={idx} style={styles.wheelItem}>
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.wheelItem}
+                  onPress={() => updateValue(type, item)}
+                >
                   <Text style={[styles.wheelText, { opacity, fontSize }]}>
                     {item}
                   </Text>
-                </View>
+                </TouchableOpacity>
               );
             })}
             <View style={styles.wheelPadding} />
@@ -200,11 +196,10 @@ export default function WorkoutScreen({ route, navigation }) {
     );
   }
 
-  const progress = (stats.current / stats.total) * 100;
+  const progress = stats.total > 0 ? (stats.current / stats.total) * 100 : 0;
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>← Back</Text>
@@ -213,7 +208,6 @@ export default function WorkoutScreen({ route, navigation }) {
         <View style={{ width: 60 }} />
       </View>
 
-      {/* Progress Bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
@@ -224,7 +218,6 @@ export default function WorkoutScreen({ route, navigation }) {
       </View>
 
       <ScrollView style={styles.content}>
-        {/* Exercise Info */}
         <View style={styles.exerciseInfo}>
           <Text style={styles.categoryText}>{currentExercise.category}</Text>
           <Text style={styles.exerciseName}>{currentExercise.name}</Text>
@@ -233,17 +226,15 @@ export default function WorkoutScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* Dial Wheels */}
         <View style={styles.dialsRow}>
-          {renderDialWheel('Sets', sets, 50, 1, setsScrollRef, 'sets')}
-          {renderDialWheel('Reps', reps, 100, 1, repsScrollRef, 'reps')}
+          {renderDialWheel('Sets', sets, 50, 1, 'sets')}
+          {renderDialWheel('Reps', reps, 100, 1, 'reps')}
         </View>
         <View style={styles.dialsRow}>
-          {renderDialWheel('Weight (kg)', weight, 200, 5, weightScrollRef, 'weight')}
-          {renderDialWheel('Duration (min)', duration, 120, 1, durationScrollRef, 'duration')}
+          {renderDialWheel('Weight (kg)', weight, 200, 5, 'weight')}
+          {renderDialWheel('Duration (min)', duration, 120, 1, 'duration')}
         </View>
 
-        {/* Navigation Buttons */}
         <View style={styles.navButtons}>
           <TouchableOpacity
             style={[styles.navButton, currentExerciseIndex === 0 && styles.navButtonDisabled]}
@@ -262,7 +253,6 @@ export default function WorkoutScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Action Buttons */}
         <TouchableOpacity style={styles.skipButton} onPress={skipExercise}>
           <Text style={styles.skipButtonText}>⏭️ Skip Exercise</Text>
         </TouchableOpacity>
@@ -294,10 +284,11 @@ const styles = StyleSheet.create({
   dialsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 12 },
   dialContainer: { flex: 1 },
   dialLabel: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8, textAlign: 'center' },
-  wheelWrapper: { position: 'relative', height: 160, backgroundColor: '#1e293b', borderRadius: 12, overflow: 'hidden' },
+  wheelWrapper: { position: 'relative', height: 200, backgroundColor: '#1e293b', borderRadius: 12, overflow: 'hidden' },
   highlightBar: { position: 'absolute', top: '50%', left: 0, right: 0, height: 48, marginTop: -24, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(59, 130, 246, 0.3)', zIndex: 10, pointerEvents: 'none' },
   wheel: { flex: 1 },
-  wheelPadding: { height: 56 },
+  wheelContent: { paddingVertical: 76 },
+  wheelPadding: { height: 0 },
   wheelItem: { height: 48, justifyContent: 'center', alignItems: 'center' },
   wheelText: { color: '#fff', fontWeight: 'bold' },
   navButtons: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginTop: 16 },
