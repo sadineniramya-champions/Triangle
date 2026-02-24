@@ -125,38 +125,44 @@ export default function WorkoutScreen({ route, navigation }) {
     }
   };
 
-  const renderDial = (label, value, setValue, max, step = 1, suffix = '') => {
-    const values = [];
-    for (let i = 0; i <= max; i += step) {
-      values.push(i);
-    }
+  const incrementValue = (setter, current, max, step) => {
+    const next = current + step;
+    if (next <= max) setter(next);
+  };
 
-    const currentIndex = value / step;
-    const visibleValues = [
-      currentIndex > 0 ? values[currentIndex - 1] : null,
-      values[currentIndex],
-      currentIndex < values.length - 1 ? values[currentIndex + 1] : null,
-    ];
+  const decrementValue = (setter, current, step) => {
+    const prev = current - step;
+    if (prev >= 0) setter(prev);
+  };
 
+  const renderDial = (label, value, onIncrement, onDecrement, suffix = '') => {
     return (
       <View style={styles.dialColumn}>
         <Text style={styles.dialLabel}>{label}</Text>
         <View style={styles.dialWheel}>
-          {visibleValues.map((val, idx) => {
-            if (val === null) return <View key={idx} style={styles.dialItem} />;
-            const isCenter = idx === 1;
-            return (
-              <TouchableOpacity
-                key={val}
-                onPress={() => setValue(val)}
-                style={[styles.dialItem, isCenter && styles.dialItemCenter]}
-              >
-                <Text style={[styles.dialText, isCenter && styles.dialTextCenter]}>
-                  {val}{suffix}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          <TouchableOpacity 
+            style={styles.dialItem}
+            onPress={onIncrement}
+          >
+            <Text style={styles.dialText}>
+              {value + (label === 'Weight' ? 5 : 1)}{suffix}
+            </Text>
+          </TouchableOpacity>
+          
+          <View style={styles.dialItemCenter}>
+            <Text style={styles.dialTextCenter}>
+              {value}{suffix}
+            </Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.dialItem}
+            onPress={onDecrement}
+          >
+            <Text style={styles.dialText}>
+              {Math.max(0, value - (label === 'Weight' ? 5 : 1))}{suffix}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -231,10 +237,32 @@ export default function WorkoutScreen({ route, navigation }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.dialsContent}
           >
-            {renderDial('Sets', sets, setSets, 50, 1)}
-            {renderDial('Reps', reps, setReps, 100, 1)}
-            {renderDial('Weight', weight, setWeight, 200, 5, ' kg')}
-            {renderDial('Duration', duration, setDuration, 120, 1, ' min')}
+            {renderDial(
+              'Sets',
+              sets,
+              () => incrementValue(setSets, sets, 50, 1),
+              () => decrementValue(setSets, sets, 1)
+            )}
+            {renderDial(
+              'Reps',
+              reps,
+              () => incrementValue(setReps, reps, 100, 1),
+              () => decrementValue(setReps, reps, 1)
+            )}
+            {renderDial(
+              'Weight',
+              weight,
+              () => incrementValue(setWeight, weight, 200, 5),
+              () => decrementValue(setWeight, weight, 5),
+              ' kg'
+            )}
+            {renderDial(
+              'Duration',
+              duration,
+              () => incrementValue(setDuration, duration, 120, 1),
+              () => decrementValue(setDuration, duration, 1),
+              ' min'
+            )}
           </ScrollView>
         </View>
 
@@ -309,32 +337,32 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#1e40af', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 8 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  exerciseName: { fontSize: 32, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 16 },
-  dialsContainer: { marginBottom: 16 },
-  dialsContent: { paddingHorizontal: 16, gap: 16 },
-  dialColumn: { width: 150, backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16 },
-  dialLabel: { fontSize: 14, color: '#94a3b8', fontWeight: '600', marginBottom: 12, textAlign: 'center' },
+  exerciseName: { fontSize: 28, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 16 },
+  dialsContainer: { marginBottom: 16, height: 220 },
+  dialsContent: { paddingHorizontal: 16, gap: 10 },
+  dialColumn: { width: 160, minWidth: 160, backgroundColor: '#1e3a5f', borderRadius: 12, padding: 12 },
+  dialLabel: { fontSize: 13, color: '#94a3b8', fontWeight: '600', marginBottom: 10, textAlign: 'center' },
   dialWheel: { alignItems: 'center' },
-  dialItem: { paddingVertical: 8, minHeight: 50, justifyContent: 'center', alignItems: 'center', width: '100%' },
-  dialItemCenter: { backgroundColor: 'rgba(59, 130, 246, 0.4)', borderRadius: 8 },
-  dialText: { fontSize: 24, color: '#64748b', fontWeight: '500' },
-  dialTextCenter: { fontSize: 48, color: '#fff', fontWeight: 'bold' },
+  dialItem: { paddingVertical: 8, minHeight: 40, justifyContent: 'center', alignItems: 'center', width: '100%' },
+  dialItemCenter: { backgroundColor: 'rgba(59, 130, 246, 0.4)', borderRadius: 8, paddingVertical: 12, marginVertical: 4, width: '100%', alignItems: 'center' },
+  dialText: { fontSize: 20, color: '#64748b', fontWeight: '500' },
+  dialTextCenter: { fontSize: 42, color: '#fff', fontWeight: 'bold' },
   notesSection: { paddingHorizontal: 16, marginBottom: 16 },
   notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
   notesInput: { backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 80, textAlignVertical: 'top' },
   actionButtons: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#0f172a' },
-  deleteBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#dc2626', borderRadius: 8, alignItems: 'center' },
-  deleteBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  addBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#3b82f6', borderRadius: 8, alignItems: 'center' },
-  addBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  bottomButtons: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: '#1e293b' },
-  navBtn: { paddingVertical: 16, paddingHorizontal: 12, backgroundColor: '#334155', borderRadius: 8, minWidth: 70, alignItems: 'center' },
+  deleteBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#dc2626', borderRadius: 8, alignItems: 'center' },
+  deleteBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  addBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#3b82f6', borderRadius: 8, alignItems: 'center' },
+  addBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  bottomButtons: { flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1e293b' },
+  navBtn: { paddingVertical: 14, paddingHorizontal: 10, backgroundColor: '#334155', borderRadius: 8, minWidth: 65, alignItems: 'center' },
   navBtnDisabled: { opacity: 0.3 },
-  navBtnText: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
-  skipBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#ea580c', borderRadius: 8, alignItems: 'center' },
-  skipBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  completeBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center' },
-  completeBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
+  navBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '600' },
+  skipBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#ea580c', borderRadius: 8, alignItems: 'center' },
+  skipBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+  completeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center' },
+  completeBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold', textAlign: 'center', lineHeight: 18 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { fontSize: 18, color: '#94a3b8' },
 });
