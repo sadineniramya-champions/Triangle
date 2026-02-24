@@ -58,54 +58,6 @@ export default function WorkoutScreen({ route, navigation }) {
     return { total, completed, skipped, current: currentExerciseIndex + 1 };
   };
 
-  const calculatePBSB = (exerciseName) => {
-    try {
-      const allSessions = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('athlete-sessions-')) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            allSessions[key] = JSON.parse(data);
-          }
-        }
-      }
-
-      let maxWeight = 0;
-      let maxWeightLast3Months = 0;
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
-      Object.keys(allSessions).forEach(key => {
-        const sessionDate = key.replace('athlete-sessions-', '');
-        const sessionObj = allSessions[key];
-        
-        ['morning', 'evening'].forEach(type => {
-          const sessionData = sessionObj[type] || [];
-          sessionData.forEach(category => {
-            category.exercises.forEach(ex => {
-              if (ex.name === exerciseName && ex.weight) {
-                const w = parseInt(ex.weight) || 0;
-                if (w > maxWeight) maxWeight = w;
-                
-                if (new Date(sessionDate) >= threeMonthsAgo && w > maxWeightLast3Months) {
-                  maxWeightLast3Months = w;
-                }
-              }
-            });
-          });
-        });
-      });
-
-      return {
-        pb: maxWeight > 0 ? maxWeight : null,
-        sb: maxWeightLast3Months > 0 ? maxWeightLast3Months : null
-      };
-    } catch (error) {
-      return { pb: null, sb: null };
-    }
-  };
-
   useEffect(() => {
     loadSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -173,22 +125,26 @@ export default function WorkoutScreen({ route, navigation }) {
     }
   };
 
-  const renderDial = (label, value, setValue, max, step = 1) => {
+  const renderDial = (label, value, setValue, max, step = 1, suffix = '') => {
     const values = [];
     for (let i = 0; i <= max; i += step) {
       values.push(i);
     }
 
     const currentIndex = value / step;
-    const startIdx = Math.max(0, currentIndex - 2);
-    const visibleValues = values.slice(startIdx, startIdx + 5);
+    const visibleValues = [
+      currentIndex > 0 ? values[currentIndex - 1] : null,
+      values[currentIndex],
+      currentIndex < values.length - 1 ? values[currentIndex + 1] : null,
+    ];
 
     return (
-      <View style={styles.dialContainer}>
+      <View style={styles.dialColumn}>
         <Text style={styles.dialLabel}>{label}</Text>
         <View style={styles.dialWheel}>
-          {visibleValues.map((val) => {
-            const isCenter = val === value;
+          {visibleValues.map((val, idx) => {
+            if (val === null) return <View key={idx} style={styles.dialItem} />;
+            const isCenter = idx === 1;
             return (
               <TouchableOpacity
                 key={val}
@@ -196,9 +152,7 @@ export default function WorkoutScreen({ route, navigation }) {
                 style={[styles.dialItem, isCenter && styles.dialItemCenter]}
               >
                 <Text style={[styles.dialText, isCenter && styles.dialTextCenter]}>
-                  {val}
-                  {label === 'Weight' && 'kg'}
-                  {label === 'Duration' && 'min'}
+                  {val}{suffix}
                 </Text>
               </TouchableOpacity>
             );
@@ -216,11 +170,10 @@ export default function WorkoutScreen({ route, navigation }) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
+          <Text style={styles.headerTitle}>{sessionType === 'morning' ? '☀️' : '🌙'} {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Workout</Text>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.closeButton}>✕</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{sessionType === 'morning' ? '☀️' : '🌙'} {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Workout</Text>
-          <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No exercises in this session</Text>
@@ -230,69 +183,59 @@ export default function WorkoutScreen({ route, navigation }) {
   }
 
   const progress = stats.total > 0 ? (stats.current / stats.total) * 100 : 0;
-  const pbsb = calculatePBSB(currentExercise.name);
   const emoji = exerciseEmojis[currentExercise.name] || '💪';
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <Text style={styles.headerTitle}>{sessionType === 'morning' ? '☀️' : '🌙'} {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Workout</Text>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.closeButton}>✕</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{sessionType === 'morning' ? '☀️' : '🌙'} {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Workout</Text>
-        <View style={{ width: 40 }} />
       </View>
 
       {/* Progress Bar */}
       <View style={styles.progressSection}>
-        <Text style={styles.progressLabel}>Exercise {stats.current} of {stats.total}</Text>
+        <View style={styles.progressRow}>
+          <Text style={styles.progressLabel}>Exercise {stats.current} of {stats.total}</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statBadge}>
+              <Text style={styles.statText}>✓ {stats.completed}</Text>
+            </View>
+            <View style={[styles.statBadge, styles.skippedBadge]}>
+              <Text style={styles.statText}>⏭️ {stats.skipped}</Text>
+            </View>
+          </View>
+        </View>
         <View style={styles.progressBarContainer}>
           <View style={[styles.progressBar, { width: `${progress}%` }]} />
         </View>
-        <View style={styles.statsRow}>
-          <Text style={styles.statBadge}>✓ {stats.completed}</Text>
-          <Text style={styles.statBadge}>⏭️ {stats.skipped}</Text>
-        </View>
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+      <ScrollView style={styles.content}>
         {/* Category Badge */}
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryText}>{currentExercise.category}</Text>
         </View>
 
-        {/* Exercise Name with Emoji */}
+        {/* Exercise Name */}
         <Text style={styles.exerciseName}>
           {emoji} {currentExercise.name}
         </Text>
 
-        {/* PB/SB Badges */}
-        {(pbsb.pb || pbsb.sb) && (
-          <View style={styles.badgesRow}>
-            {pbsb.pb && (
-              <View style={styles.pbBadge}>
-                <Text style={styles.badgeText}>PB: {pbsb.pb}kg</Text>
-              </View>
-            )}
-            {pbsb.sb && (
-              <View style={styles.sbBadge}>
-                <Text style={styles.badgeText}>SB: {pbsb.sb}kg <Text style={styles.badgeSubtext}>(3mo)</Text></Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Dial Wheels */}
-        <View style={styles.dialsGrid}>
-          <View style={styles.dialRow}>
+        {/* Dial Wheels - Horizontal Scrollable */}
+        <View style={styles.dialsContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dialsContent}
+          >
             {renderDial('Sets', sets, setSets, 50, 1)}
             {renderDial('Reps', reps, setReps, 100, 1)}
-          </View>
-          <View style={styles.dialRow}>
-            {renderDial('Weight', weight, setWeight, 200, 5)}
-            {renderDial('Duration', duration, setDuration, 120, 1)}
-          </View>
+            {renderDial('Weight', weight, setWeight, 200, 5, ' kg')}
+            {renderDial('Duration', duration, setDuration, 120, 1, ' min')}
+          </ScrollView>
         </View>
 
         {/* Notes */}
@@ -309,7 +252,17 @@ export default function WorkoutScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* Bottom Buttons */}
+      {/* Action Buttons */}
+      <View style={styles.actionButtons}>
+        <TouchableOpacity style={styles.deleteBtn}>
+          <Text style={styles.deleteBtnText}>🗑️ Delete Exercise</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.addBtn}>
+          <Text style={styles.addBtnText}>✚ Add Exercise</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Bottom Navigation */}
       <View style={styles.bottomButtons}>
         <TouchableOpacity
           style={[styles.navBtn, currentExerciseIndex === 0 && styles.navBtnDisabled]}
@@ -324,7 +277,7 @@ export default function WorkoutScreen({ route, navigation }) {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.completeBtn} onPress={completeExercise}>
-          <Text style={styles.completeBtnText}>✓ Complete</Text>
+          <Text style={styles.completeBtnText}>✓{'\n'}Completed</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -341,45 +294,47 @@ export default function WorkoutScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f172a' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#334155' },
-  closeButton: { fontSize: 24, color: '#fff', padding: 8 },
-  headerTitle: { fontSize: 16, fontWeight: '600', color: '#fff' },
-  progressSection: { backgroundColor: '#1e293b', padding: 16, borderBottomWidth: 1, borderBottomColor: '#334155' },
-  progressLabel: { fontSize: 14, color: '#94a3b8', marginBottom: 8, textAlign: 'center' },
-  progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden', marginBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#1e293b' },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff', flex: 1 },
+  closeButton: { fontSize: 28, color: '#fff', padding: 8 },
+  progressSection: { backgroundColor: '#1e293b', paddingHorizontal: 16, paddingBottom: 12 },
+  progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  progressLabel: { fontSize: 14, color: '#94a3b8' },
+  statsRow: { flexDirection: 'row', gap: 8 },
+  statBadge: { backgroundColor: '#10b981', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+  skippedBadge: { backgroundColor: '#ea580c' },
+  statText: { fontSize: 14, color: '#fff', fontWeight: '600' },
+  progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden' },
   progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
-  statsRow: { flexDirection: 'row', justifyContent: 'center', gap: 16 },
-  statBadge: { backgroundColor: '#334155', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, fontSize: 14, color: '#fff' },
   content: { flex: 1 },
-  contentContainer: { paddingBottom: 24 },
-  categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#1e40af', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 12 },
+  categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#1e40af', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 8 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  exerciseName: { fontSize: 36, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 16 },
-  badgesRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 24 },
-  pbBadge: { backgroundColor: '#78350f', borderWidth: 1, borderColor: '#eab308', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  sbBadge: { backgroundColor: '#1e3a8a', borderWidth: 1, borderColor: '#3b82f6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  badgeText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  badgeSubtext: { fontSize: 12, color: '#94a3b8' },
-  dialsGrid: { gap: 16, paddingHorizontal: 16 },
-  dialRow: { flexDirection: 'row', gap: 16 },
-  dialContainer: { flex: 1, backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16 },
+  exerciseName: { fontSize: 32, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 16 },
+  dialsContainer: { marginBottom: 16 },
+  dialsContent: { paddingHorizontal: 16, gap: 16 },
+  dialColumn: { width: 150, backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16 },
   dialLabel: { fontSize: 14, color: '#94a3b8', fontWeight: '600', marginBottom: 12, textAlign: 'center' },
-  dialWheel: { alignItems: 'center', gap: 4 },
-  dialItem: { paddingVertical: 6, paddingHorizontal: 16, minWidth: 100, alignItems: 'center' },
-  dialItemCenter: { backgroundColor: 'rgba(59, 130, 246, 0.4)', borderRadius: 8, paddingVertical: 8 },
-  dialText: { fontSize: 20, color: '#64748b', fontWeight: '500' },
+  dialWheel: { alignItems: 'center' },
+  dialItem: { paddingVertical: 8, minHeight: 50, justifyContent: 'center', alignItems: 'center', width: '100%' },
+  dialItemCenter: { backgroundColor: 'rgba(59, 130, 246, 0.4)', borderRadius: 8 },
+  dialText: { fontSize: 24, color: '#64748b', fontWeight: '500' },
   dialTextCenter: { fontSize: 48, color: '#fff', fontWeight: 'bold' },
-  notesSection: { paddingHorizontal: 16, marginTop: 24 },
+  notesSection: { paddingHorizontal: 16, marginBottom: 16 },
   notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
-  notesInput: { backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 100, textAlignVertical: 'top' },
-  bottomButtons: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
-  navBtn: { paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#334155', borderRadius: 8, minWidth: 70, alignItems: 'center' },
+  notesInput: { backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 80, textAlignVertical: 'top' },
+  actionButtons: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#0f172a' },
+  deleteBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#dc2626', borderRadius: 8, alignItems: 'center' },
+  deleteBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  addBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#3b82f6', borderRadius: 8, alignItems: 'center' },
+  addBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  bottomButtons: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: '#1e293b' },
+  navBtn: { paddingVertical: 16, paddingHorizontal: 12, backgroundColor: '#334155', borderRadius: 8, minWidth: 70, alignItems: 'center' },
   navBtnDisabled: { opacity: 0.3 },
-  navBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  skipBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#ea580c', borderRadius: 8, alignItems: 'center' },
+  navBtnText: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
+  skipBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#ea580c', borderRadius: 8, alignItems: 'center' },
   skipBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  completeBtn: { flex: 1.5, paddingVertical: 14, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center' },
-  completeBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  completeBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center' },
+  completeBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { fontSize: 18, color: '#94a3b8' },
 });
