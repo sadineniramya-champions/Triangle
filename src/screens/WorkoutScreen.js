@@ -234,36 +234,44 @@ export default function WorkoutScreen({ route, navigation }) {
           {emoji} {currentExercise.name}
         </Text>
 
-        {/* Dial Wheels - All 4 in One Row */}
-        <View style={styles.dialsWrapper}>
-          <View style={styles.dialsContent}>
-            {renderDial(
-              'Sets',
-              sets,
-              () => incrementValue(setSets, sets, 50, 1),
-              () => decrementValue(setSets, sets, 1)
-            )}
-            {renderDial(
-              'Reps',
-              reps,
-              () => incrementValue(setReps, reps, 100, 1),
-              () => decrementValue(setReps, reps, 1)
-            )}
-            {renderDial(
-              'Weight',
-              weight,
-              () => incrementValue(setWeight, weight, 200, 5),
-              () => decrementValue(setWeight, weight, 5),
-              ' kg'
-            )}
-            {renderDial(
-              'Duration',
-              duration,
-              () => incrementValue(setDuration, duration, 120, 1),
-              () => decrementValue(setDuration, duration, 1),
-              ' min'
-            )}
+        {/* PB/SB Badges */}
+        <View style={styles.badgesRow}>
+          <View style={styles.pbBadge}>
+            <Text style={styles.badgeText}>PB: 20kg</Text>
           </View>
+          <View style={styles.sbBadge}>
+            <Text style={styles.badgeText}>SB: 20kg <Text style={styles.badgeSubtext}>(3mo)</Text></Text>
+          </View>
+        </View>
+
+        {/* Dial Wheels - Direct on background, no wrapper */}
+        <View style={styles.dialsContent}>
+          {renderDial(
+            'Sets',
+            sets,
+            () => incrementValue(setSets, sets, 50, 1),
+            () => decrementValue(setSets, sets, 1)
+          )}
+          {renderDial(
+            'Reps',
+            reps,
+            () => incrementValue(setReps, reps, 100, 1),
+            () => decrementValue(setReps, reps, 1)
+          )}
+          {renderDial(
+            'Weight',
+            weight,
+            () => incrementValue(setWeight, weight, 200, 5),
+            () => decrementValue(setWeight, weight, 5),
+            ' kg'
+          )}
+          {renderDial(
+            'Duration',
+            duration,
+            () => incrementValue(setDuration, duration, 120, 1),
+            () => decrementValue(setDuration, duration, 1),
+            ' min'
+          )}
         </View>
 
         {/* Notes */}
@@ -272,7 +280,7 @@ export default function WorkoutScreen({ route, navigation }) {
           <TextInput
             style={styles.notesInput}
             placeholder="Add notes..."
-            placeholderTextColor="#64748b"
+            placeholderTextColor="#5a6b88"
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -311,43 +319,47 @@ export default function WorkoutScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a1628' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#1c2e4a' },
+  container: { flex: 1, backgroundColor: '#0d1929' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#1d3a5c' },
   headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff', flex: 1 },
   closeButton: { fontSize: 28, color: '#fff', padding: 8 },
-  progressSection: { backgroundColor: '#1c2e4a', paddingHorizontal: 16, paddingBottom: 12 },
+  progressSection: { backgroundColor: '#1d3a5c', paddingHorizontal: 16, paddingBottom: 12 },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  progressLabel: { fontSize: 14, color: '#94a3b8' },
+  progressLabel: { fontSize: 14, color: '#8b9bb3' },
   statsRow: { flexDirection: 'row', gap: 8 },
   statBadge: { backgroundColor: '#10b981', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 14 },
   skippedBadge: { backgroundColor: '#f97316' },
   statText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden' },
+  progressBarContainer: { height: 6, backgroundColor: '#2d4a6b', borderRadius: 3, overflow: 'hidden' },
   progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
   content: { flex: 1 },
-  categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#2563eb', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 12 },
+  categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#3b5998', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 12 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  exerciseName: { fontSize: 32, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 20 },
-  dialsWrapper: { backgroundColor: '#1e3a5f', marginHorizontal: 16, borderRadius: 16, padding: 16, marginBottom: 20 },
-  dialsContent: { flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
-  dialColumn: { flex: 1 },
+  exerciseName: { fontSize: 36, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 16 },
+  badgesRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 20 },
+  pbBadge: { backgroundColor: '#4d3800', borderWidth: 1.5, borderColor: '#a68232', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
+  sbBadge: { backgroundColor: '#1e3a5a', borderWidth: 1.5, borderColor: '#3b6fb8', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
+  badgeText: { fontSize: 14, color: '#fff', fontWeight: '600' },
+  badgeSubtext: { fontSize: 12, color: '#94a3b8' },
+  dialsContent: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 20 },
+  dialColumn: { flex: 1, backgroundColor: '#1e3a5f', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 6 },
   dialLabel: { fontSize: 13, color: '#94a3b8', fontWeight: '600', marginBottom: 10, textAlign: 'center' },
   dialWheel: { alignItems: 'center' },
   dialItem: { paddingVertical: 8, minHeight: 44, justifyContent: 'center', alignItems: 'center', width: '100%' },
-  dialItemCenter: { backgroundColor: '#3b72d4', borderRadius: 10, paddingVertical: 16, marginVertical: 4, width: '100%', alignItems: 'center' },
-  dialText: { fontSize: 18, color: '#64748b', fontWeight: '500' },
+  dialItemCenter: { backgroundColor: '#4a7bc8', borderRadius: 10, paddingVertical: 16, marginVertical: 4, width: '100%', alignItems: 'center' },
+  dialText: { fontSize: 18, color: '#5a6b88', fontWeight: '500' },
   dialTextCenter: { fontSize: 36, color: '#fff', fontWeight: 'bold' },
   notesSection: { paddingHorizontal: 16, marginBottom: 20 },
   notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
   notesInput: { backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 100, textAlignVertical: 'top' },
-  bottomButtons: { flexDirection: 'row', padding: 12, gap: 10, backgroundColor: '#1c2e4a' },
-  navBtn: { paddingVertical: 16, paddingHorizontal: 12, backgroundColor: '#334155', borderRadius: 10, minWidth: 70, alignItems: 'center' },
+  bottomButtons: { flexDirection: 'row', padding: 12, gap: 10, backgroundColor: '#1d3a5c' },
+  navBtn: { paddingVertical: 16, paddingHorizontal: 12, backgroundColor: '#2d4a6b', borderRadius: 10, minWidth: 70, alignItems: 'center' },
   navBtnDisabled: { opacity: 0.3 },
-  navBtnText: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
-  skipBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#f97316', borderRadius: 10, alignItems: 'center' },
+  navBtnText: { color: '#8b9bb3', fontSize: 14, fontWeight: '600' },
+  skipBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#d97706', borderRadius: 10, alignItems: 'center' },
   skipBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   completeBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#10b981', borderRadius: 10, alignItems: 'center' },
   completeBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { fontSize: 18, color: '#94a3b8' },
+  emptyText: { fontSize: 18, color: '#8b9bb3' },
 });
