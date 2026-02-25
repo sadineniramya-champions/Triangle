@@ -136,6 +136,10 @@ export default function WorkoutScreen({ route, navigation }) {
   };
 
   const renderDial = (label, value, onIncrement, onDecrement, suffix = '') => {
+    const step = label === 'Weight' ? 5 : 1;
+    const topValue = value + step;
+    const bottomValue = Math.max(0, value - step);
+
     return (
       <View style={styles.dialColumn}>
         <Text style={styles.dialLabel}>{label}</Text>
@@ -145,7 +149,7 @@ export default function WorkoutScreen({ route, navigation }) {
             onPress={onIncrement}
           >
             <Text style={styles.dialText}>
-              {value + (label === 'Weight' ? 5 : 1)}{suffix}
+              {topValue}{suffix}
             </Text>
           </TouchableOpacity>
           
@@ -160,7 +164,7 @@ export default function WorkoutScreen({ route, navigation }) {
             onPress={onDecrement}
           >
             <Text style={styles.dialText}>
-              {Math.max(0, value - (label === 'Weight' ? 5 : 1))}{suffix}
+              {bottomValue}{suffix}
             </Text>
           </TouchableOpacity>
         </View>
@@ -230,13 +234,9 @@ export default function WorkoutScreen({ route, navigation }) {
           {emoji} {currentExercise.name}
         </Text>
 
-        {/* Dial Wheels - Horizontal Scrollable */}
+        {/* Dial Wheels - All 4 in One Row */}
         <View style={styles.dialsContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.dialsContent}
-          >
+          <View style={styles.dialsContent}>
             {renderDial(
               'Sets',
               sets,
@@ -263,7 +263,7 @@ export default function WorkoutScreen({ route, navigation }) {
               () => decrementValue(setDuration, duration, 1),
               ' min'
             )}
-          </ScrollView>
+          </View>
         </View>
 
         {/* Notes */}
@@ -280,16 +280,6 @@ export default function WorkoutScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.deleteBtn}>
-          <Text style={styles.deleteBtnText}>🗑️ Delete Exercise</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.addBtn}>
-          <Text style={styles.addBtnText}>✚ Add Exercise</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Bottom Navigation */}
       <View style={styles.bottomButtons}>
         <TouchableOpacity
@@ -305,7 +295,7 @@ export default function WorkoutScreen({ route, navigation }) {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.completeBtn} onPress={completeExercise}>
-          <Text style={styles.completeBtnText}>✓{'\n'}Completed</Text>
+          <Text style={styles.completeBtnText}>✓ Complete</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -321,48 +311,43 @@ export default function WorkoutScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#1e293b' },
+  container: { flex: 1, backgroundColor: '#0a1628' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#1a2744' },
   headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff', flex: 1 },
   closeButton: { fontSize: 28, color: '#fff', padding: 8 },
-  progressSection: { backgroundColor: '#1e293b', paddingHorizontal: 16, paddingBottom: 12 },
+  progressSection: { backgroundColor: '#1a2744', paddingHorizontal: 16, paddingBottom: 12 },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  progressLabel: { fontSize: 14, color: '#94a3b8' },
+  progressLabel: { fontSize: 14, color: '#8b92a8' },
   statsRow: { flexDirection: 'row', gap: 8 },
   statBadge: { backgroundColor: '#10b981', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
   skippedBadge: { backgroundColor: '#ea580c' },
   statText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden' },
+  progressBarContainer: { height: 6, backgroundColor: '#2d3e5f', borderRadius: 3, overflow: 'hidden' },
   progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
   content: { flex: 1 },
   categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#1e40af', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 8 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  exerciseName: { fontSize: 24, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 12 },
-  dialsContainer: { marginBottom: 16, height: 200 },
-  dialsContent: { paddingHorizontal: 8, gap: 6 },
-  dialColumn: { width: 140, minWidth: 140, backgroundColor: '#1e3a5f', borderRadius: 12, padding: 10 },
-  dialLabel: { fontSize: 13, color: '#94a3b8', fontWeight: '600', marginBottom: 8, textAlign: 'center' },
+  exerciseName: { fontSize: 28, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, marginBottom: 16 },
+  dialsContainer: { marginBottom: 16, paddingHorizontal: 16 },
+  dialsContent: { flexDirection: 'row', gap: 4, justifyContent: 'space-between' },
+  dialColumn: { flex: 1, minWidth: 80, maxWidth: 90, backgroundColor: '#1e3560', borderRadius: 10, padding: 8 },
+  dialLabel: { fontSize: 11, color: '#8b92a8', fontWeight: '600', marginBottom: 6, textAlign: 'center' },
   dialWheel: { alignItems: 'center' },
-  dialItem: { paddingVertical: 6, minHeight: 36, justifyContent: 'center', alignItems: 'center', width: '100%' },
-  dialItemCenter: { backgroundColor: 'rgba(59, 130, 246, 0.4)', borderRadius: 8, paddingVertical: 10, marginVertical: 3, width: '100%', alignItems: 'center' },
-  dialText: { fontSize: 18, color: '#64748b', fontWeight: '500' },
-  dialTextCenter: { fontSize: 36, color: '#fff', fontWeight: 'bold' },
+  dialItem: { paddingVertical: 4, minHeight: 32, justifyContent: 'center', alignItems: 'center', width: '100%' },
+  dialItemCenter: { backgroundColor: '#2d5a9e', borderRadius: 8, paddingVertical: 8, marginVertical: 2, width: '100%', alignItems: 'center' },
+  dialText: { fontSize: 16, color: '#64748b', fontWeight: '500' },
+  dialTextCenter: { fontSize: 32, color: '#fff', fontWeight: 'bold' },
   notesSection: { paddingHorizontal: 16, marginBottom: 16 },
-  notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
-  notesInput: { backgroundColor: '#1e3a5f', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 80, textAlignVertical: 'top' },
-  actionButtons: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#0f172a' },
-  deleteBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#dc2626', borderRadius: 8, alignItems: 'center' },
-  deleteBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  addBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#3b82f6', borderRadius: 8, alignItems: 'center' },
-  addBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  bottomButtons: { flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1e293b' },
-  navBtn: { paddingVertical: 14, paddingHorizontal: 10, backgroundColor: '#334155', borderRadius: 8, minWidth: 65, alignItems: 'center' },
+  notesLabel: { fontSize: 12, color: '#8b92a8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
+  notesInput: { backgroundColor: '#1e3560', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 80, textAlignVertical: 'top' },
+  bottomButtons: { flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1a2744' },
+  navBtn: { paddingVertical: 14, paddingHorizontal: 10, backgroundColor: '#2d3e5f', borderRadius: 8, minWidth: 65, alignItems: 'center' },
   navBtnDisabled: { opacity: 0.3 },
-  navBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '600' },
-  skipBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#ea580c', borderRadius: 8, alignItems: 'center' },
+  navBtnText: { color: '#8b92a8', fontSize: 13, fontWeight: '600' },
+  skipBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#ea7317', borderRadius: 8, alignItems: 'center' },
   skipBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
   completeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center' },
-  completeBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold', textAlign: 'center', lineHeight: 18 },
+  completeBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold', textAlign: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { fontSize: 18, color: '#94a3b8' },
+  emptyText: { fontSize: 18, color: '#8b92a8' },
 });
