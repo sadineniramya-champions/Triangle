@@ -186,6 +186,10 @@ export default function WorkoutScreen({ route, navigation }) {
   const emoji = exerciseEmojis[currentEx.name] || '💪';
   const { personalBest, seasonBest } = calculateBests(currentEx.name);
 
+  // Check current exercise status
+  const isCompleted = currentEx.completed || currentEx.status === 'completed';
+  const isSkipped = currentEx.status === 'skipped';
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -248,21 +252,6 @@ export default function WorkoutScreen({ route, navigation }) {
               </View>
             )}
           </View>
-        </View>
-
-        <View style={styles.exerciseActionsRow}>
-          <TouchableOpacity
-            onPress={deleteCurrentExercise}
-            style={styles.deleteExerciseBtn}
-          >
-            <Text style={styles.deleteExerciseText}>🗑️ Delete Exercise</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={addExercise}
-            style={styles.addExerciseBtn}
-          >
-            <Text style={styles.addExerciseText}>➕ Add Exercise</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.dialsGrid}>
@@ -329,6 +318,23 @@ export default function WorkoutScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
+      {/* Add/Delete Exercise Buttons - ABOVE navigation */}
+      <View style={styles.exerciseActionsRow}>
+        <TouchableOpacity
+          onPress={deleteCurrentExercise}
+          style={styles.deleteExerciseBtn}
+        >
+          <Text style={styles.deleteExerciseText}>🗑️ Delete</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={addExercise}
+          style={styles.addExerciseBtn}
+        >
+          <Text style={styles.addExerciseText}>➕ Add</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Navigation Footer - AT BOTTOM */}
       <View style={styles.footer}>
         <TouchableOpacity
           onPress={() => setCurrentExerciseIndex(Math.max(0, currentExerciseIndex - 1))}
@@ -342,12 +348,15 @@ export default function WorkoutScreen({ route, navigation }) {
           onPress={() => {
             const updated = { ...session };
             updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'skipped';
+            updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].completed = false;
             saveSession(updated);
             setCurrentExerciseIndex(currentExerciseIndex + 1);
           }}
-          style={styles.skipBtn}
+          style={[styles.skipBtn, isSkipped && styles.skipBtnActive]}
         >
-          <Text style={styles.skipBtnText}>Skip</Text>
+          <Text style={styles.skipBtnText}>
+            {isSkipped ? '⏭️ Skipped' : 'Skip'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -358,9 +367,11 @@ export default function WorkoutScreen({ route, navigation }) {
             saveSession(updated);
             setCurrentExerciseIndex(currentExerciseIndex + 1);
           }}
-          style={styles.completeBtn}
+          style={[styles.completeBtn, isCompleted && styles.completeBtnActive]}
         >
-          <Text style={styles.completeBtnText}>✓ Complete</Text>
+          <Text style={styles.completeBtnText}>
+            {isCompleted ? '✓ Completed' : '✓ Complete'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -456,7 +467,7 @@ const styles = StyleSheet.create({
   statText: { fontSize: 14, color: '#fff', fontWeight: '600' },
   progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden' },
   progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
-  content: { flex: 1, marginBottom: 100 },
+  content: { flex: 1, marginBottom: 120 },
   scrollContent: { paddingBottom: 20 },
   categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#2563eb', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 16 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
@@ -471,11 +482,6 @@ const styles = StyleSheet.create({
   badgeLabel: { fontWeight: 'bold' },
   badgeValue: { fontWeight: 'bold' },
   badgeSubtext: { fontSize: 12, color: '#94a3b8' },
-  exerciseActionsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 20 },
-  deleteExerciseBtn: { flex: 1, backgroundColor: '#dc2626', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  deleteExerciseText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  addExerciseBtn: { flex: 1, backgroundColor: '#3b82f6', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  addExerciseText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   dialsGrid: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 20, gap: 8 },
   dialColumn: { flex: 1, minWidth: 75 },
   dialLabel: { fontSize: 11, color: '#3b82f6', fontWeight: 'bold', marginBottom: 8, textAlign: 'center', letterSpacing: 0.5 },
@@ -490,13 +496,20 @@ const styles = StyleSheet.create({
   notesSection: { paddingHorizontal: 16, marginBottom: 16 },
   notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 6, letterSpacing: 1 },
   notesInput: { backgroundColor: '#1e293b', borderRadius: 12, padding: 12, color: '#fff', fontSize: 14, minHeight: 70, textAlignVertical: 'top', borderWidth: 1, borderColor: '#334155' },
-  footer: { position: 'absolute', bottom: 25, left: 0, right: 0, flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155', paddingBottom: 14 },
+  exerciseActionsRow: { position: 'absolute', bottom: 62, left: 0, right: 0, flexDirection: 'row', gap: 8, paddingHorizontal: 10, backgroundColor: '#0f172a', paddingVertical: 8 },
+  deleteExerciseBtn: { flex: 1, backgroundColor: '#dc2626', paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+  deleteExerciseText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
+  addExerciseBtn: { flex: 1, backgroundColor: '#3b82f6', paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+  addExerciseText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
   navBtn: { paddingVertical: 14, paddingHorizontal: 10, backgroundColor: '#334155', borderRadius: 8, minWidth: 65, alignItems: 'center', justifyContent: 'center' },
   navBtnDisabled: { opacity: 0.3 },
   navBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '600' },
   skipBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#ea7317', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  skipBtnActive: { backgroundColor: '#f97316', opacity: 0.8 },
   skipBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
   completeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  completeBtnActive: { backgroundColor: '#059669', opacity: 0.8 },
   completeBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
   completeContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   completeEmoji: { fontSize: 96 },
