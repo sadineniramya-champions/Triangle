@@ -178,7 +178,7 @@ export default function WorkoutScreen({ route, navigation }) {
         </View>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         {/* Category Badge */}
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryText}>{currentEx.categoryName}</Text>
@@ -215,191 +215,55 @@ export default function WorkoutScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* Exercise Input - Conditional based on exercise name */}
-        {currentEx.name === 'Half Squads' ? (
-          // SET-BY-SET ENTRY FOR HALF SQUADS
-          <View style={styles.detailsCard}>
-            {currentEx.notes && (
-              <View style={styles.notesParseSection}>
-                <Text style={styles.notesParseLabel}>Notes: {currentEx.notes}</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    const notes = currentEx.notes || '';
-                    const updated = { ...session };
-                    const exercise = updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex];
-                    
-                    const repsMatch = notes.match(/(\d+(?:\+\d+)+)/);
-                    const reps = repsMatch ? repsMatch[1].split('+').map(r => r.trim()) : [];
-                    
-                    const weightMatch = notes.match(/(?:weight[s]?:\s*)?(\d+(?:\+\d+)+)\s*(?:kg)?/i);
-                    const weights = weightMatch ? weightMatch[1].split('+').map(w => w.trim()) : [];
-                    
-                    const numSets = Math.max(reps.length, weights.length);
-                    
-                    if (numSets > 0) {
-                      exercise.numSets = numSets;
-                      exercise.setData = [];
-                      
-                      for (let i = 0; i < numSets; i++) {
-                        exercise.setData.push({
-                          reps: reps[i] || '',
-                          weight: weights[i] || ''
-                        });
-                      }
-                      
-                      saveSession(updated);
-                      alert(`Loaded ${numSets} sets from notes!`);
-                    } else {
-                      alert('Could not parse notes. Use format: "10+8+6, weight: 50+60+70kg"');
-                    }
-                  }}
-                  style={styles.parseButton}
-                >
-                  <Text style={styles.parseButtonText}>📋 Load from Notes</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            <View style={styles.setsSelector}>
-              <Text style={styles.setsSelectorLabel}>Number of Sets</Text>
-              <View style={styles.setsButtons}>
-                {[1, 2, 3, 4, 5, 6].map(num => (
-                  <TouchableOpacity
-                    key={num}
-                    onPress={() => {
-                      const updated = { ...session };
-                      const exercise = updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex];
-                      
-                      if (!exercise.setData) exercise.setData = [];
-                      
-                      if (num > exercise.setData.length) {
-                        for (let i = exercise.setData.length; i < num; i++) {
-                          exercise.setData.push({ reps: '', weight: '' });
-                        }
-                      } else {
-                        exercise.setData = exercise.setData.slice(0, num);
-                      }
-                      
-                      exercise.numSets = num;
-                      saveSession(updated);
-                    }}
-                    style={[
-                      styles.setButton,
-                      (currentEx.numSets || 0) === num && styles.setButtonSelected
-                    ]}
-                  >
-                    <Text style={[
-                      styles.setButtonText,
-                      (currentEx.numSets || 0) === num && styles.setButtonTextSelected
-                    ]}>{num}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {currentEx.numSets > 0 && (
-              <View style={styles.setsList}>
-                {Array.from({ length: currentEx.numSets || 0 }, (_, setIndex) => {
-                  const setData = (currentEx.setData || [])[setIndex] || { reps: '', weight: '' };
-                  
-                  return (
-                    <View key={setIndex} style={styles.setRow}>
-                      <Text style={styles.setLabel}>Set {setIndex + 1}</Text>
-                      <View style={styles.setInputs}>
-                        <View style={styles.setInputGroup}>
-                          <Text style={styles.setInputLabel}>Reps</Text>
-                          <TextInput
-                            value={setData.reps}
-                            onChangeText={(text) => {
-                              const updated = { ...session };
-                              const exercise = updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex];
-                              if (!exercise.setData) exercise.setData = [];
-                              if (!exercise.setData[setIndex]) exercise.setData[setIndex] = {};
-                              exercise.setData[setIndex].reps = text;
-                              saveSession(updated);
-                            }}
-                            keyboardType="numeric"
-                            style={styles.setInput}
-                            placeholder="0"
-                            placeholderTextColor="#64748b"
-                          />
-                        </View>
-                        <View style={styles.setInputGroup}>
-                          <Text style={styles.setInputLabel}>Weight (kg)</Text>
-                          <TextInput
-                            value={setData.weight}
-                            onChangeText={(text) => {
-                              const updated = { ...session };
-                              const exercise = updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex];
-                              if (!exercise.setData) exercise.setData = [];
-                              if (!exercise.setData[setIndex]) exercise.setData[setIndex] = {};
-                              exercise.setData[setIndex].weight = text;
-                              saveSession(updated);
-                            }}
-                            keyboardType="numeric"
-                            style={styles.setInput}
-                            placeholder="0"
-                            placeholderTextColor="#64748b"
-                          />
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-        ) : (
-          // DIAL WHEELS - Grid Layout (4 columns)
-          <View style={styles.dialsGrid}>
-            <DialWheel
-              label="Sets"
-              value={parseInt(currentEx.sets) || 0}
-              max={50}
-              step={1}
-              onChange={(val) => {
-                const updated = { ...session };
-                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].sets = val.toString();
-                saveSession(updated);
-              }}
-            />
-            <DialWheel
-              label="Reps"
-              value={parseInt(currentEx.reps) || 0}
-              max={100}
-              step={1}
-              onChange={(val) => {
-                const updated = { ...session };
-                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].reps = val.toString();
-                saveSession(updated);
-              }}
-            />
-            <DialWheel
-              label="Weight"
-              value={parseInt(currentEx.weight) || 0}
-              max={300}
-              step={5}
-              suffix=" kg"
-              onChange={(val) => {
-                const updated = { ...session };
-                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].weight = val.toString();
-                saveSession(updated);
-              }}
-            />
-            <DialWheel
-              label="Duration"
-              value={parseInt(currentEx.duration) || 0}
-              max={120}
-              step={1}
-              suffix=" min"
-              onChange={(val) => {
-                const updated = { ...session };
-                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].duration = val.toString();
-                saveSession(updated);
-              }}
-            />
-          </View>
-        )}
+        {/* Dial Wheels - 4 in a row */}
+        <View style={styles.dialsGrid}>
+          <DialWheel
+            label="Sets"
+            value={parseInt(currentEx.sets) || 0}
+            max={50}
+            step={1}
+            onChange={(val) => {
+              const updated = { ...session };
+              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].sets = val.toString();
+              saveSession(updated);
+            }}
+          />
+          <DialWheel
+            label="Reps"
+            value={parseInt(currentEx.reps) || 0}
+            max={100}
+            step={1}
+            onChange={(val) => {
+              const updated = { ...session };
+              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].reps = val.toString();
+              saveSession(updated);
+            }}
+          />
+          <DialWheel
+            label="Weight"
+            value={parseInt(currentEx.weight) || 0}
+            max={300}
+            step={5}
+            suffix=" kg"
+            onChange={(val) => {
+              const updated = { ...session };
+              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].weight = val.toString();
+              saveSession(updated);
+            }}
+          />
+          <DialWheel
+            label="Duration"
+            value={parseInt(currentEx.duration) || 0}
+            max={120}
+            step={1}
+            suffix=" min"
+            onChange={(val) => {
+              const updated = { ...session };
+              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].duration = val.toString();
+              saveSession(updated);
+            }}
+          />
+        </View>
 
         {/* Notes Input */}
         <View style={styles.notesSection}>
@@ -466,16 +330,33 @@ export default function WorkoutScreen({ route, navigation }) {
   );
 }
 
-// Dial Wheel Component - FIXED
+// Dial Wheel Component - COMPLETELY FIXED
 function DialWheel({ label, value, max, step, suffix = '', onChange }) {
+  const [localValue, setLocalValue] = useState(value);
   const scrollViewRef = useRef(null);
   const itemHeight = 48;
 
   useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  useEffect(() => {
     if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ y: value * itemHeight / step, animated: false });
+      const scrollPosition = (localValue / step) * itemHeight;
+      scrollViewRef.current.scrollTo({ y: scrollPosition, animated: false });
     }
-  }, [value, step]);
+  }, [localValue, step]);
+
+  const handleScroll = (event) => {
+    const scrollY = event.nativeEvent.contentOffset.y;
+    const index = Math.round(scrollY / itemHeight);
+    const newValue = Math.min(max, Math.max(0, index * step));
+    setLocalValue(newValue);
+  };
+
+  const handleScrollEnd = () => {
+    onChange(localValue);
+  };
 
   return (
     <View style={styles.dialColumn}>
@@ -487,20 +368,17 @@ function DialWheel({ label, value, max, step, suffix = '', onChange }) {
           showsVerticalScrollIndicator={false}
           snapToInterval={itemHeight}
           decelerationRate="fast"
-          onMomentumScrollEnd={(e) => {
-            const scrollY = e.nativeEvent.contentOffset.y;
-            const index = Math.round(scrollY / itemHeight);
-            const newValue = Math.min(max, index * step);
-            onChange(newValue);
-          }}
+          onScroll={handleScroll}
+          onMomentumScrollEnd={handleScrollEnd}
+          scrollEventThrottle={16}
           style={styles.dialScroll}
         >
           <View style={styles.dialSpacer} />
           {Array.from({ length: Math.floor(max / step) + 1 }, (_, i) => {
             const val = i * step;
-            const distance = Math.abs(val - value);
+            const distance = Math.abs(val - localValue);
             const opacity = distance === 0 ? 1 : distance <= step ? 0.5 : 0.2;
-            const fontSize = distance === 0 ? 32 : distance <= step ? 20 : 16;
+            const fontSize = distance === 0 ? 36 : distance <= step ? 24 : 18;
             
             return (
               <View key={i} style={styles.dialItem}>
@@ -532,6 +410,7 @@ const styles = StyleSheet.create({
   progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden' },
   progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
   content: { flex: 1 },
+  scrollContent: { paddingBottom: 120 },
   categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#2563eb', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 16 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
   exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, marginBottom: 16 },
@@ -545,45 +424,26 @@ const styles = StyleSheet.create({
   badgeLabel: { fontWeight: 'bold' },
   badgeValue: { fontWeight: 'bold' },
   badgeSubtext: { fontSize: 12, color: '#94a3b8' },
-  detailsCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 12, marginHorizontal: 16, marginBottom: 16 },
-  notesParseSection: { backgroundColor: '#334155', borderRadius: 8, padding: 8, marginBottom: 12 },
-  notesParseLabel: { fontSize: 12, color: '#94a3b8', marginBottom: 4 },
-  parseButton: { backgroundColor: '#10b981', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
-  parseButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  setsSelector: { marginBottom: 16 },
-  setsSelectorLabel: { fontSize: 14, color: '#94a3b8', fontWeight: 'bold', marginBottom: 8 },
-  setsButtons: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  setButton: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#334155', borderRadius: 8 },
-  setButtonSelected: { backgroundColor: '#3b82f6' },
-  setButtonText: { fontSize: 16, color: '#94a3b8', fontWeight: 'bold' },
-  setButtonTextSelected: { color: '#fff' },
-  setsList: { gap: 8 },
-  setRow: { backgroundColor: '#334155', borderRadius: 8, padding: 12 },
-  setLabel: { fontSize: 16, color: '#fff', fontWeight: 'bold', marginBottom: 8 },
-  setInputs: { flexDirection: 'row', gap: 12 },
-  setInputGroup: { flex: 1 },
-  setInputLabel: { fontSize: 12, color: '#94a3b8', marginBottom: 4 },
-  setInput: { backgroundColor: '#1e293b', color: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, fontSize: 16, fontWeight: 'bold', textAlign: 'center', borderWidth: 1, borderColor: '#475569' },
-  dialsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, marginBottom: 16, gap: 8 },
-  dialColumn: { width: '23%', minWidth: 80 },
-  dialLabel: { fontSize: 13, color: '#fff', fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
+  dialsGrid: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 20, gap: 8 },
+  dialColumn: { flex: 1, minWidth: 75 },
+  dialLabel: { fontSize: 13, color: '#fff', fontWeight: 'bold', marginBottom: 6, textAlign: 'center' },
   dialWrapper: { position: 'relative', height: 140, backgroundColor: '#1e293b', borderRadius: 12, overflow: 'hidden' },
-  dialHighlight: { position: 'absolute', top: '50%', marginTop: -24, left: 0, right: 0, height: 48, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(59, 130, 246, 0.4)', zIndex: 10, pointerEvents: 'none' },
+  dialHighlight: { position: 'absolute', top: '50%', marginTop: -24, left: 0, right: 0, height: 48, backgroundColor: 'rgba(59, 130, 246, 0.3)', borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(59, 130, 246, 0.5)', zIndex: 10, pointerEvents: 'none' },
   dialScroll: { flex: 1 },
   dialSpacer: { height: 46 },
   dialItem: { height: 48, justifyContent: 'center', alignItems: 'center' },
   dialText: { color: '#fff', fontWeight: 'bold' },
-  notesSection: { paddingHorizontal: 16, marginBottom: 100 },
+  notesSection: { paddingHorizontal: 16, marginBottom: 20 },
   notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
-  notesInput: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 80, textAlignVertical: 'top', borderWidth: 1, borderColor: '#334155' },
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1e293b' },
-  navBtn: { paddingVertical: 14, paddingHorizontal: 10, backgroundColor: '#334155', borderRadius: 8, minWidth: 65, alignItems: 'center' },
+  notesInput: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 100, textAlignVertical: 'top', borderWidth: 1, borderColor: '#334155' },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', padding: 12, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
+  navBtn: { paddingVertical: 16, paddingHorizontal: 12, backgroundColor: '#334155', borderRadius: 8, minWidth: 70, alignItems: 'center', justifyContent: 'center' },
   navBtnDisabled: { opacity: 0.3 },
-  navBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '600' },
-  skipBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#ea7317', borderRadius: 8, alignItems: 'center' },
-  skipBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
-  completeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center' },
-  completeBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+  navBtnText: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
+  skipBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#ea7317', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  skipBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  completeBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  completeBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   completeContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   completeEmoji: { fontSize: 96 },
   completeTitle: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginTop: 16, marginBottom: 16 },
