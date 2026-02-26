@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { exerciseEmojis } from '../data/exercises';
 
 export default function WorkoutScreen({ route, navigation }) {
@@ -178,153 +178,154 @@ export default function WorkoutScreen({ route, navigation }) {
         </View>
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-        {/* Category Badge */}
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{currentEx.categoryName}</Text>
-        </View>
-
-        {/* Exercise Name */}
-        <View style={styles.exerciseHeader}>
-          <Text style={styles.exerciseEmoji}>{emoji}</Text>
-          <View style={styles.exerciseInfo}>
-            <Text style={styles.exerciseName}>{currentEx.name}</Text>
-            
-            {/* PB/SB Badges */}
-            {(personalBest > 0 || seasonBest > 0) && (
-              <View style={styles.badgesRow}>
-                {personalBest > 0 && (
-                  <View style={styles.pbBadge}>
-                    <Text style={styles.badgeText}>
-                      <Text style={styles.badgeLabel}>PB:</Text>
-                      <Text style={styles.badgeValue}> {personalBest}kg</Text>
-                    </Text>
-                  </View>
-                )}
-                {seasonBest > 0 && (
-                  <View style={styles.sbBadge}>
-                    <Text style={styles.badgeText}>
-                      <Text style={styles.badgeLabel}>SB:</Text>
-                      <Text style={styles.badgeValue}> {seasonBest}kg </Text>
-                      <Text style={styles.badgeSubtext}>({seasonMonths}mo)</Text>
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
+      {/* Scrollable Content */}
+      <View style={styles.scrollWrapper}>
+        <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+          {/* Category Badge */}
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryText}>{currentEx.categoryName}</Text>
           </View>
-        </View>
 
-        {/* Dial Wheels - 4 in a row */}
-        <View style={styles.dialsGrid}>
-          <DialWheel
-            label="Sets"
-            value={parseInt(currentEx.sets) || 0}
-            max={50}
-            step={1}
-            onChange={(val) => {
-              const updated = { ...session };
-              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].sets = val.toString();
-              saveSession(updated);
-            }}
-          />
-          <DialWheel
-            label="Reps"
-            value={parseInt(currentEx.reps) || 0}
-            max={100}
-            step={1}
-            onChange={(val) => {
-              const updated = { ...session };
-              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].reps = val.toString();
-              saveSession(updated);
-            }}
-          />
-          <DialWheel
-            label="Weight (kg)"
-            value={parseInt(currentEx.weight) || 0}
-            max={300}
-            step={5}
-            onChange={(val) => {
-              const updated = { ...session };
-              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].weight = val.toString();
-              saveSession(updated);
-            }}
-          />
-          <DialWheel
-            label="Duration (min)"
-            value={parseInt(currentEx.duration) || 0}
-            max={120}
-            step={1}
-            onChange={(val) => {
-              const updated = { ...session };
-              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].duration = val.toString();
-              saveSession(updated);
-            }}
-          />
-        </View>
+          {/* Exercise Name */}
+          <View style={styles.exerciseHeader}>
+            <Text style={styles.exerciseEmoji}>{emoji}</Text>
+            <View style={styles.exerciseInfo}>
+              <Text style={styles.exerciseName}>{currentEx.name}</Text>
+              
+              {/* PB/SB Badges */}
+              {(personalBest > 0 || seasonBest > 0) && (
+                <View style={styles.badgesRow}>
+                  {personalBest > 0 && (
+                    <View style={styles.pbBadge}>
+                      <Text style={styles.badgeText}>
+                        <Text style={styles.badgeLabel}>PB:</Text>
+                        <Text style={styles.badgeValue}> {personalBest}kg</Text>
+                      </Text>
+                    </View>
+                  )}
+                  {seasonBest > 0 && (
+                    <View style={styles.sbBadge}>
+                      <Text style={styles.badgeText}>
+                        <Text style={styles.badgeLabel}>SB:</Text>
+                        <Text style={styles.badgeValue}> {seasonBest}kg </Text>
+                        <Text style={styles.badgeSubtext}>({seasonMonths}mo)</Text>
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          </View>
 
-        {/* Notes Input */}
-        <View style={styles.notesSection}>
-          <Text style={styles.notesLabel}>NOTES</Text>
-          <TextInput
-            value={currentEx.notes || ''}
-            onChangeText={(text) => {
-              const updated = { ...session };
-              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].notes = text;
-              saveSession(updated);
-            }}
-            multiline
-            style={styles.notesInput}
-            placeholder="Add notes..."
-            placeholderTextColor="#64748b"
-          />
-        </View>
-      </ScrollView>
+          {/* Dial Wheels - 4 in a row */}
+          <View style={styles.dialsGrid}>
+            <DialWheel
+              label="Sets"
+              value={parseInt(currentEx.sets) || 0}
+              max={50}
+              step={1}
+              onChange={(val) => {
+                const updated = { ...session };
+                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].sets = val.toString();
+                saveSession(updated);
+              }}
+            />
+            <DialWheel
+              label="Reps"
+              value={parseInt(currentEx.reps) || 0}
+              max={100}
+              step={1}
+              onChange={(val) => {
+                const updated = { ...session };
+                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].reps = val.toString();
+                saveSession(updated);
+              }}
+            />
+            <DialWheel
+              label="Weight (kg)"
+              value={parseInt(currentEx.weight) || 0}
+              max={300}
+              step={5}
+              onChange={(val) => {
+                const updated = { ...session };
+                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].weight = val.toString();
+                saveSession(updated);
+              }}
+            />
+            <DialWheel
+              label="Duration (min)"
+              value={parseInt(currentEx.duration) || 0}
+              max={120}
+              step={1}
+              onChange={(val) => {
+                const updated = { ...session };
+                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].duration = val.toString();
+                saveSession(updated);
+              }}
+            />
+          </View>
 
-      {/* Navigation Footer - ABSOLUTELY AT BOTTOM */}
-      <View style={styles.footerContainer}>
-        <View style={styles.footer}>
-          <TouchableOpacity
-            onPress={() => setCurrentExerciseIndex(Math.max(0, currentExerciseIndex - 1))}
-            disabled={currentExerciseIndex === 0}
-            style={[styles.navBtn, currentExerciseIndex === 0 && styles.navBtnDisabled]}
-          >
-            <Text style={styles.navBtnText}>← Prev</Text>
-          </TouchableOpacity>
+          {/* Notes Input */}
+          <View style={styles.notesSection}>
+            <Text style={styles.notesLabel}>NOTES</Text>
+            <TextInput
+              value={currentEx.notes || ''}
+              onChangeText={(text) => {
+                const updated = { ...session };
+                updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].notes = text;
+                saveSession(updated);
+              }}
+              multiline
+              style={styles.notesInput}
+              placeholder="Add notes..."
+              placeholderTextColor="#64748b"
+            />
+          </View>
+        </ScrollView>
+      </View>
 
-          <TouchableOpacity
-            onPress={() => {
-              const updated = { ...session };
-              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'skipped';
-              saveSession(updated);
-              setCurrentExerciseIndex(currentExerciseIndex + 1);
-            }}
-            style={styles.skipBtn}
-          >
-            <Text style={styles.skipBtnText}>Skip</Text>
-          </TouchableOpacity>
+      {/* Navigation Footer */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          onPress={() => setCurrentExerciseIndex(Math.max(0, currentExerciseIndex - 1))}
+          disabled={currentExerciseIndex === 0}
+          style={[styles.navBtn, currentExerciseIndex === 0 && styles.navBtnDisabled]}
+        >
+          <Text style={styles.navBtnText}>← Prev</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => {
-              const updated = { ...session };
-              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].completed = true;
-              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'completed';
-              saveSession(updated);
-              setCurrentExerciseIndex(currentExerciseIndex + 1);
-            }}
-            style={styles.completeBtn}
-          >
-            <Text style={styles.completeBtnText}>✓ Complete</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            const updated = { ...session };
+            updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'skipped';
+            saveSession(updated);
+            setCurrentExerciseIndex(currentExerciseIndex + 1);
+          }}
+          style={styles.skipBtn}
+        >
+          <Text style={styles.skipBtnText}>Skip</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => setCurrentExerciseIndex(currentExerciseIndex + 1)}
-            disabled={currentExerciseIndex >= allExercises.length - 1}
-            style={[styles.navBtn, currentExerciseIndex >= allExercises.length - 1 && styles.navBtnDisabled]}
-          >
-            <Text style={styles.navBtnText}>Next →</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => {
+            const updated = { ...session };
+            updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].completed = true;
+            updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'completed';
+            saveSession(updated);
+            setCurrentExerciseIndex(currentExerciseIndex + 1);
+          }}
+          style={styles.completeBtn}
+        >
+          <Text style={styles.completeBtnText}>✓ Complete</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setCurrentExerciseIndex(currentExerciseIndex + 1)}
+          disabled={currentExerciseIndex >= allExercises.length - 1}
+          style={[styles.navBtn, currentExerciseIndex >= allExercises.length - 1 && styles.navBtnDisabled]}
+        >
+          <Text style={styles.navBtnText}>Next →</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -409,8 +410,9 @@ const styles = StyleSheet.create({
   statText: { fontSize: 14, color: '#fff', fontWeight: '600' },
   progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden' },
   progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
-  content: { flex: 1, marginBottom: Platform.OS === 'web' ? 80 : 0 },
-  scrollContent: { paddingBottom: 100 },
+  scrollWrapper: { flex: 1 },
+  content: { flex: 1 },
+  scrollContent: { paddingBottom: 20 },
   categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#2563eb', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 16 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
   exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, marginBottom: 16 },
@@ -427,16 +429,15 @@ const styles = StyleSheet.create({
   dialsGrid: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 20, gap: 8 },
   dialColumn: { flex: 1, minWidth: 75 },
   dialLabel: { fontSize: 11, color: '#fff', fontWeight: 'bold', marginBottom: 6, textAlign: 'center' },
-  dialWrapper: { position: 'relative', height: 180, backgroundColor: '#1e293b', borderRadius: 12, overflow: 'hidden' },
+  dialWrapper: { position: 'relative', height: 220, backgroundColor: '#1e293b', borderRadius: 12, overflow: 'hidden' },
   dialHighlight: { position: 'absolute', top: '50%', marginTop: -24, left: 0, right: 0, height: 48, backgroundColor: 'rgba(59, 130, 246, 0.3)', borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(59, 130, 246, 0.5)', zIndex: 10, pointerEvents: 'none' },
   dialScroll: { flex: 1 },
-  dialSpacer: { height: 66 },
+  dialSpacer: { height: 86 },
   dialItem: { height: 48, justifyContent: 'center', alignItems: 'center' },
   dialText: { color: '#fff', fontWeight: 'bold' },
   notesSection: { paddingHorizontal: 16, marginBottom: 20 },
   notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
   notesInput: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 100, textAlignVertical: 'top', borderWidth: 1, borderColor: '#334155' },
-  footerContainer: { position: 'absolute', bottom: 0, left: 0, right: 0 },
   footer: { flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
   navBtn: { paddingVertical: 14, paddingHorizontal: 10, backgroundColor: '#334155', borderRadius: 8, minWidth: 65, alignItems: 'center', justifyContent: 'center' },
   navBtnDisabled: { opacity: 0.3 },
