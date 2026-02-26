@@ -265,7 +265,7 @@ export default function WorkoutScreen({ route, navigation }) {
             />
           </View>
 
-          {/* Notes Input */}
+          {/* Notes Input - SMALLER */}
           <View style={styles.notesSection}>
             <Text style={styles.notesLabel}>NOTES</Text>
             <TextInput
@@ -284,7 +284,7 @@ export default function WorkoutScreen({ route, navigation }) {
         </ScrollView>
       </View>
 
-      {/* Navigation Footer */}
+      {/* Navigation Footer - MOVED UP */}
       <View style={styles.footer}>
         <TouchableOpacity
           onPress={() => setCurrentExerciseIndex(Math.max(0, currentExerciseIndex - 1))}
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
   scrollWrapper: { flex: 1 },
   content: { flex: 1 },
-  scrollContent: { paddingBottom: 20 },
+  scrollContent: { paddingBottom: 120 },
   categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#2563eb', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 16 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
   exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, marginBottom: 16 },
@@ -435,10 +435,10 @@ const styles = StyleSheet.create({
   dialSpacer: { height: 86 },
   dialItem: { height: 48, justifyContent: 'center', alignItems: 'center' },
   dialText: { color: '#fff', fontWeight: 'bold' },
-  notesSection: { paddingHorizontal: 16, marginBottom: 20 },
-  notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
-  notesInput: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 100, textAlignVertical: 'top', borderWidth: 1, borderColor: '#334155' },
-  footer: { flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
+  notesSection: { paddingHorizontal: 16, marginBottom: 16 },
+  notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 6, letterSpacing: 1 },
+  notesInput: { backgroundColor: '#1e293b', borderRadius: 12, padding: 12, color: '#fff', fontSize: 14, minHeight: 70, textAlignVertical: 'top', borderWidth: 1, borderColor: '#334155' },
+  footer: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155', paddingBottom: 16 },
   navBtn: { paddingVertical: 14, paddingHorizontal: 10, backgroundColor: '#334155', borderRadius: 8, minWidth: 65, alignItems: 'center', justifyContent: 'center' },
   navBtnDisabled: { opacity: 0.3 },
   navBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '600' },
