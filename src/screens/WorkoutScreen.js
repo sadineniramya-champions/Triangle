@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   setInputs: { flexDirection: 'row', gap: 12 },
   setInputGroup: { flex: 1 },
   setInputLabel: { fontSize: 12, color: '#94a3b8', marginBottom: 4 },
-  setInput: { backgroundColor: '#1e293b', color: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, fontSize: 16, fontWeight: 'bold', textAlign: 'center', borderWidth: 1, borderColor: '#475569 },
+  setInput: { backgroundColor: '#1e293b', color: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, fontSize: 16, fontWeight: 'bold', textAlign: 'center', borderWidth: 1, borderColor: '#475569' },
   dialsContainer: { marginBottom: 16 },
   dialsContent: { paddingHorizontal: 16, gap: 8 },
   dialColumn: { width: 160, minWidth: 160 },
