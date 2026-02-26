@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
 import { exerciseEmojis } from '../data/exercises';
 
 export default function WorkoutScreen({ route, navigation }) {
@@ -240,11 +240,10 @@ export default function WorkoutScreen({ route, navigation }) {
             }}
           />
           <DialWheel
-            label="Weight"
+            label="Weight (kg)"
             value={parseInt(currentEx.weight) || 0}
             max={300}
             step={5}
-            suffix=" kg"
             onChange={(val) => {
               const updated = { ...session };
               updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].weight = val.toString();
@@ -252,11 +251,10 @@ export default function WorkoutScreen({ route, navigation }) {
             }}
           />
           <DialWheel
-            label="Duration"
+            label="Duration (min)"
             value={parseInt(currentEx.duration) || 0}
             max={120}
             step={1}
-            suffix=" min"
             onChange={(val) => {
               const updated = { ...session };
               updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].duration = val.toString();
@@ -283,55 +281,57 @@ export default function WorkoutScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* Navigation Footer - FIXED AT BOTTOM */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          onPress={() => setCurrentExerciseIndex(Math.max(0, currentExerciseIndex - 1))}
-          disabled={currentExerciseIndex === 0}
-          style={[styles.navBtn, currentExerciseIndex === 0 && styles.navBtnDisabled]}
-        >
-          <Text style={styles.navBtnText}>← Prev</Text>
-        </TouchableOpacity>
+      {/* Navigation Footer - ABSOLUTELY AT BOTTOM */}
+      <View style={styles.footerContainer}>
+        <View style={styles.footer}>
+          <TouchableOpacity
+            onPress={() => setCurrentExerciseIndex(Math.max(0, currentExerciseIndex - 1))}
+            disabled={currentExerciseIndex === 0}
+            style={[styles.navBtn, currentExerciseIndex === 0 && styles.navBtnDisabled]}
+          >
+            <Text style={styles.navBtnText}>← Prev</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            const updated = { ...session };
-            updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'skipped';
-            saveSession(updated);
-            setCurrentExerciseIndex(currentExerciseIndex + 1);
-          }}
-          style={styles.skipBtn}
-        >
-          <Text style={styles.skipBtnText}>Skip</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              const updated = { ...session };
+              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'skipped';
+              saveSession(updated);
+              setCurrentExerciseIndex(currentExerciseIndex + 1);
+            }}
+            style={styles.skipBtn}
+          >
+            <Text style={styles.skipBtnText}>Skip</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            const updated = { ...session };
-            updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].completed = true;
-            updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'completed';
-            saveSession(updated);
-            setCurrentExerciseIndex(currentExerciseIndex + 1);
-          }}
-          style={styles.completeBtn}
-        >
-          <Text style={styles.completeBtnText}>✓ Complete</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              const updated = { ...session };
+              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].completed = true;
+              updated[sessionType][currentEx.categoryIndex].exercises[currentEx.exerciseIndex].status = 'completed';
+              saveSession(updated);
+              setCurrentExerciseIndex(currentExerciseIndex + 1);
+            }}
+            style={styles.completeBtn}
+          >
+            <Text style={styles.completeBtnText}>✓ Complete</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => setCurrentExerciseIndex(currentExerciseIndex + 1)}
-          disabled={currentExerciseIndex >= allExercises.length - 1}
-          style={[styles.navBtn, currentExerciseIndex >= allExercises.length - 1 && styles.navBtnDisabled]}
-        >
-          <Text style={styles.navBtnText}>Next →</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setCurrentExerciseIndex(currentExerciseIndex + 1)}
+            disabled={currentExerciseIndex >= allExercises.length - 1}
+            style={[styles.navBtn, currentExerciseIndex >= allExercises.length - 1 && styles.navBtnDisabled]}
+          >
+            <Text style={styles.navBtnText}>Next →</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
 }
 
-// Dial Wheel Component - COMPLETELY FIXED
-function DialWheel({ label, value, max, step, suffix = '', onChange }) {
+// Dial Wheel Component
+function DialWheel({ label, value, max, step, onChange }) {
   const [localValue, setLocalValue] = useState(value);
   const scrollViewRef = useRef(null);
   const itemHeight = 48;
@@ -383,7 +383,7 @@ function DialWheel({ label, value, max, step, suffix = '', onChange }) {
             return (
               <View key={i} style={styles.dialItem}>
                 <Text style={[styles.dialText, { opacity, fontSize }]}>
-                  {val}{suffix}
+                  {val}
                 </Text>
               </View>
             );
@@ -409,8 +409,8 @@ const styles = StyleSheet.create({
   statText: { fontSize: 14, color: '#fff', fontWeight: '600' },
   progressBarContainer: { height: 6, backgroundColor: '#334155', borderRadius: 3, overflow: 'hidden' },
   progressBar: { height: '100%', backgroundColor: '#10b981', borderRadius: 3 },
-  content: { flex: 1 },
-  scrollContent: { paddingBottom: 120 },
+  content: { flex: 1, marginBottom: Platform.OS === 'web' ? 80 : 0 },
+  scrollContent: { paddingBottom: 100 },
   categoryBadge: { alignSelf: 'flex-start', backgroundColor: '#2563eb', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20, margin: 16, marginBottom: 16 },
   categoryText: { fontSize: 14, color: '#fff', fontWeight: '600' },
   exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, marginBottom: 16 },
@@ -426,24 +426,25 @@ const styles = StyleSheet.create({
   badgeSubtext: { fontSize: 12, color: '#94a3b8' },
   dialsGrid: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 20, gap: 8 },
   dialColumn: { flex: 1, minWidth: 75 },
-  dialLabel: { fontSize: 13, color: '#fff', fontWeight: 'bold', marginBottom: 6, textAlign: 'center' },
-  dialWrapper: { position: 'relative', height: 140, backgroundColor: '#1e293b', borderRadius: 12, overflow: 'hidden' },
+  dialLabel: { fontSize: 11, color: '#fff', fontWeight: 'bold', marginBottom: 6, textAlign: 'center' },
+  dialWrapper: { position: 'relative', height: 180, backgroundColor: '#1e293b', borderRadius: 12, overflow: 'hidden' },
   dialHighlight: { position: 'absolute', top: '50%', marginTop: -24, left: 0, right: 0, height: 48, backgroundColor: 'rgba(59, 130, 246, 0.3)', borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(59, 130, 246, 0.5)', zIndex: 10, pointerEvents: 'none' },
   dialScroll: { flex: 1 },
-  dialSpacer: { height: 46 },
+  dialSpacer: { height: 66 },
   dialItem: { height: 48, justifyContent: 'center', alignItems: 'center' },
   dialText: { color: '#fff', fontWeight: 'bold' },
   notesSection: { paddingHorizontal: 16, marginBottom: 20 },
   notesLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 8, letterSpacing: 1 },
   notesInput: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, color: '#fff', fontSize: 16, minHeight: 100, textAlignVertical: 'top', borderWidth: 1, borderColor: '#334155' },
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', padding: 12, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
-  navBtn: { paddingVertical: 16, paddingHorizontal: 12, backgroundColor: '#334155', borderRadius: 8, minWidth: 70, alignItems: 'center', justifyContent: 'center' },
+  footerContainer: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  footer: { flexDirection: 'row', padding: 10, gap: 8, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155' },
+  navBtn: { paddingVertical: 14, paddingHorizontal: 10, backgroundColor: '#334155', borderRadius: 8, minWidth: 65, alignItems: 'center', justifyContent: 'center' },
   navBtnDisabled: { opacity: 0.3 },
-  navBtnText: { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
-  skipBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#ea7317', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  skipBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  completeBtn: { flex: 1, paddingVertical: 16, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  completeBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  navBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '600' },
+  skipBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#ea7317', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  skipBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+  completeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#10b981', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  completeBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
   completeContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   completeEmoji: { fontSize: 96 },
   completeTitle: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginTop: 16, marginBottom: 16 },
